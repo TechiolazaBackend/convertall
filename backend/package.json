@@ -1,0 +1,33 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "start2": "node server2.js",
+    "dev2": "node --watch server2.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.987.0",
+    "@aws-sdk/lib-storage": "^3.987.0",
+    "@aws-sdk/s3-request-presigner": "^3.987.0",
+    "archiver": "^7.0.1",
+    "cors": "^2.8.6",
+    "docx": "^9.5.2",
+    "dotenv": "^17.2.4",
+    "express": "^5.2.1",
+    "mammoth": "^1.11.0",
+    "multer": "^2.0.2",
+    "pdf-lib": "^1.17.1",
+    "pdf-parse": "^2.4.5",
+    "pdf2pic": "^3.2.0",
+    "sharp": "^0.34.5"
+  }
+}

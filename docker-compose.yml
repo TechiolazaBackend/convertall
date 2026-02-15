@@ -1,0 +1,22 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: technolaza-backend:latest
+    container_name: technolaza-backend
+    environment:
+      NODE_ENV: production
+      PORT: 5001
+      WHISPER_BIN: /usr/local/bin/whisper-cli
+      WHISPER_MODEL: /app/models/ggml-base.en.bin
+      SOFFICE_BIN: /usr/bin/soffice
+    ports:
+      - "5001:5001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
