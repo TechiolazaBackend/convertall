@@ -1,8 +1,53 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
-const DEFAULT_API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:5001';
+const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:5001').replace(/\/$/, '');
+
+const FEATURE_SPOTLIGHT = [
+  {
+    id: 'tool-image-pdf',
+    title: 'Image -> PDF',
+    hint: 'Merge many images into one PDF',
+    icon: 'IP',
+  },
+  {
+    id: 'tool-pdf-images',
+    title: 'PDF -> Images',
+    hint: 'PNG, JPG, ZIP, or direct payload',
+    icon: 'PI',
+  },
+  {
+    id: 'tool-pdf-word',
+    title: 'PDF -> Word',
+    hint: 'Convert to editable DOCX',
+    icon: 'PW',
+  },
+  {
+    id: 'tool-image-format',
+    title: 'PNG <-> JPG',
+    hint: 'Quick image re-encoding',
+    icon: 'IJ',
+  },
+  {
+    id: 'tool-voice-text',
+    title: 'Voice -> Text',
+    hint: 'Whisper transcription output',
+    icon: 'VT',
+  },
+  {
+    id: 'tool-text-voice',
+    title: 'Text/Doc -> Voice',
+    hint: 'Generate MP3/WAV/AIFF',
+    icon: 'TV',
+  },
+  {
+    id: 'tool-youtube',
+    title: 'YouTube Download',
+    hint: 'Fetch MP4 or MP3 in one step',
+    icon: 'YT',
+  },
+];
 
 function parseFilename(dispositionHeader, fallbackName) {
   if (!dispositionHeader) {
@@ -89,8 +134,8 @@ async function parseErrorResponse(response) {
   return text || `Request failed (${response.status})`;
 }
 
-async function requestDownload({ apiBase, endpoint, method = 'POST', body, headers, fallbackName }) {
-  const response = await fetch(`${apiBase}${endpoint}`, {
+async function requestDownload({ endpoint, method = 'POST', body, headers, fallbackName }) {
+  const response = await fetch(`${API_BASE}${endpoint}`, {
     method,
     body,
     headers,
@@ -124,11 +169,16 @@ function StatusLine({ status }) {
   return <p className={`status status-${status.type}`}>{status.message}</p>;
 }
 
-function ToolCard({ title, subtitle, children, delay = 0 }) {
+function ToolCard({ id, title, subtitle, icon, children, delay = 0 }) {
   return (
-    <section className="tool-card" style={{ animationDelay: `${delay}ms` }}>
+    <section id={id} className="tool-card" style={{ animationDelay: `${delay}ms` }}>
       <header className="tool-header">
-        <h2>{title}</h2>
+        <div className="tool-title-row">
+          <span className="tool-icon" aria-hidden="true">
+            {icon}
+          </span>
+          <h2>{title}</h2>
+        </div>
         <p>{subtitle}</p>
       </header>
       <div className="tool-content">{children}</div>
@@ -137,8 +187,6 @@ function ToolCard({ title, subtitle, children, delay = 0 }) {
 }
 
 export default function HomePage() {
-  const [apiBase, setApiBase] = useState(DEFAULT_API_BASE);
-
   const [imagesToPdfFiles, setImagesToPdfFiles] = useState([]);
   const [imagesToPdfLoading, setImagesToPdfLoading] = useState(false);
   const [imagesToPdfStatus, setImagesToPdfStatus] = useState(null);
@@ -175,8 +223,6 @@ export default function HomePage() {
   const [youtubeLoading, setYoutubeLoading] = useState(false);
   const [youtubeStatus, setYoutubeStatus] = useState(null);
 
-  const apiBaseView = useMemo(() => apiBase.trim().replace(/\/$/, ''), [apiBase]);
-
   async function handleImagesToPdf(event) {
     event.preventDefault();
 
@@ -195,7 +241,6 @@ export default function HomePage() {
       }
 
       const result = await requestDownload({
-        apiBase: apiBaseView,
         endpoint: '/api/convert/images-to-pdf',
         body: formData,
         fallbackName: 'converted.pdf',
@@ -228,7 +273,6 @@ export default function HomePage() {
 
       const fallbackName = pdfToImagesDelivery === 'zip' ? 'pdf-images.zip' : 'pdf-images.multipart';
       const result = await requestDownload({
-        apiBase: apiBaseView,
         endpoint: '/api/convert/pdf-to-images',
         body: formData,
         fallbackName,
@@ -263,7 +307,6 @@ export default function HomePage() {
       formData.append('file', pdfToWordFile);
 
       const result = await requestDownload({
-        apiBase: apiBaseView,
         endpoint: '/api/convert/pdf-to-word',
         body: formData,
         fallbackName: 'converted.docx',
@@ -294,7 +337,6 @@ export default function HomePage() {
       formData.append('targetFormat', imageTargetFormat);
 
       const result = await requestDownload({
-        apiBase: apiBaseView,
         endpoint: '/api/convert/image-format',
         body: formData,
         fallbackName: `converted.${imageTargetFormat}`,
@@ -325,7 +367,6 @@ export default function HomePage() {
       formData.append('outputFormat', voiceToTextOutput);
 
       const result = await requestDownload({
-        apiBase: apiBaseView,
         endpoint: '/api/speech/voice-to-text',
         body: formData,
         fallbackName: `transcript.${voiceToTextOutput}`,
@@ -367,7 +408,6 @@ export default function HomePage() {
       formData.append('outputFormat', toVoiceOutput);
 
       const result = await requestDownload({
-        apiBase: apiBaseView,
         endpoint: '/api/speech/to-voice',
         body: formData,
         fallbackName: `speech.${toVoiceOutput}`,
@@ -394,7 +434,6 @@ export default function HomePage() {
 
     try {
       const result = await requestDownload({
-        apiBase: apiBaseView,
         endpoint: '/api/youtube/download',
         body: JSON.stringify({
           url: youtubeUrl.trim(),
@@ -423,23 +462,37 @@ export default function HomePage() {
         <p className="eyebrow">Technolaza Converter Suite</p>
         <h1>One workspace for every file, speech, and media conversion.</h1>
         <p className="hero-copy">
-          Image, PDF, audio, voice synthesis, and YouTube downloads routed to your backend with ready-to-download results.
+          Pick a capability card, jump into the exact tool, and download finished outputs instantly.
         </p>
 
-        <div className="backend-config">
-          <label htmlFor="apiBase">Backend URL</label>
-          <input
-            id="apiBase"
-            type="url"
-            value={apiBase}
-            onChange={(event) => setApiBase(event.target.value)}
-            placeholder="http://localhost:5001"
-          />
+        <div className="backend-note">
+          <span className="pulse-dot" aria-hidden="true" />
+          Connected to backend at <code>{API_BASE}</code>
+        </div>
+
+        <div className="feature-strip" aria-label="Feature shortcuts">
+          {FEATURE_SPOTLIGHT.map((feature) => (
+            <a key={feature.id} href={`#${feature.id}`} className="feature-pill">
+              <span className="feature-icon" aria-hidden="true">
+                {feature.icon}
+              </span>
+              <span className="feature-text">
+                <strong>{feature.title}</strong>
+                <small>{feature.hint}</small>
+              </span>
+            </a>
+          ))}
         </div>
       </header>
 
       <section className="tool-grid">
-        <ToolCard title="Image -> PDF" subtitle="Merge one or many PNG/JPG files into a single PDF." delay={0}>
+        <ToolCard
+          id="tool-image-pdf"
+          title="Image -> PDF"
+          subtitle="Merge one or many PNG/JPG files into a single PDF."
+          icon="IP"
+          delay={0}
+        >
           <form onSubmit={handleImagesToPdf}>
             <label>Images (multi-select)</label>
             <input
@@ -455,7 +508,13 @@ export default function HomePage() {
           </form>
         </ToolCard>
 
-        <ToolCard title="PDF -> Images" subtitle="Render PDF pages as PNG/JPG and choose ZIP or direct delivery." delay={80}>
+        <ToolCard
+          id="tool-pdf-images"
+          title="PDF -> Images"
+          subtitle="Render PDF pages as PNG/JPG and choose ZIP or direct delivery."
+          icon="PI"
+          delay={80}
+        >
           <form onSubmit={handlePdfToImages}>
             <label>PDF file</label>
             <input
@@ -484,7 +543,13 @@ export default function HomePage() {
           </form>
         </ToolCard>
 
-        <ToolCard title="PDF -> Word" subtitle="Convert PDF layout into DOCX using LibreOffice." delay={160}>
+        <ToolCard
+          id="tool-pdf-word"
+          title="PDF -> Word"
+          subtitle="Convert PDF layout into DOCX using LibreOffice."
+          icon="PW"
+          delay={160}
+        >
           <form onSubmit={handlePdfToWord}>
             <label>PDF file</label>
             <input
@@ -499,7 +564,13 @@ export default function HomePage() {
           </form>
         </ToolCard>
 
-        <ToolCard title="PNG <-> JPG" subtitle="Re-encode image formats with quality-safe defaults." delay={240}>
+        <ToolCard
+          id="tool-image-format"
+          title="PNG <-> JPG"
+          subtitle="Re-encode image formats with quality-safe defaults."
+          icon="IJ"
+          delay={240}
+        >
           <form onSubmit={handleImageFormat}>
             <label>Image file</label>
             <input
@@ -521,7 +592,13 @@ export default function HomePage() {
           </form>
         </ToolCard>
 
-        <ToolCard title="Voice -> Text" subtitle="Offline Whisper transcription as TXT, DOCX, or PDF." delay={320}>
+        <ToolCard
+          id="tool-voice-text"
+          title="Voice -> Text"
+          subtitle="Offline Whisper transcription as TXT, DOCX, or PDF."
+          icon="VT"
+          delay={320}
+        >
           <form onSubmit={handleVoiceToText}>
             <label>Audio file</label>
             <input
@@ -544,7 +621,13 @@ export default function HomePage() {
           </form>
         </ToolCard>
 
-        <ToolCard title="Text/PDF/Word -> Voice" subtitle="Synthesize speech from typed text or extracted document text." delay={400}>
+        <ToolCard
+          id="tool-text-voice"
+          title="Text/PDF/Word -> Voice"
+          subtitle="Synthesize speech from typed text or extracted document text."
+          icon="TV"
+          delay={400}
+        >
           <form onSubmit={handleToVoice}>
             <label>Input source</label>
             <div className="segmented">
@@ -598,7 +681,13 @@ export default function HomePage() {
           </form>
         </ToolCard>
 
-        <ToolCard title="YouTube Download" subtitle="Download YouTube videos/shorts as MP4 video or MP3 audio." delay={480}>
+        <ToolCard
+          id="tool-youtube"
+          title="YouTube Download"
+          subtitle="Download YouTube videos/shorts as MP4 video or MP3 audio."
+          icon="YT"
+          delay={480}
+        >
           <form onSubmit={handleYoutubeDownload}>
             <label>YouTube URL</label>
             <input

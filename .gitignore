@@ -38,3 +38,5 @@ downloads/
 
 # Local docker/runtime leftovers
 *.pid
+
+README-server2.md
