@@ -8,14 +8,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     graphicsmagick \
     libreoffice \
     libreoffice-writer \
-    python3 \
-    python3-pip \
+    yt-dlp \
     ca-certificates \
     git \
     cmake \
     build-essential \
     curl \
-  && pip3 install --no-cache-dir yt-dlp \
   && rm -rf /var/lib/apt/lists/*
 
 RUN git clone --depth 1 https://github.com/ggml-org/whisper.cpp.git /opt/whisper.cpp \
