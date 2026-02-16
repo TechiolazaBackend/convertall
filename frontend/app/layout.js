@@ -1,25 +1,31 @@
-import { Fraunces, Space_Grotesk } from 'next/font/google';
-import './globals.css';
+import { Inter, Space_Grotesk } from "next/font/google";
 
-const uiFont = Space_Grotesk({
-  subsets: ['latin'],
-  variable: '--font-ui',
+import TopNav from "./components/TopNav";
+import "./globals.css";
+
+const uiFont = Inter({
+  subsets: ["latin"],
+  variable: "--font-ui",
 });
 
-const displayFont = Fraunces({
-  subsets: ['latin'],
-  variable: '--font-display',
+const displayFont = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-display",
 });
 
 export const metadata = {
-  title: 'Technolaza Studio',
-  description: 'Unified media conversion workspace',
+  title: "Technolaza Studio",
+  description:
+    "Unified media conversion workspace — convert images, PDFs, audio, and video in seconds.",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${uiFont.variable} ${displayFont.variable}`}>
-      <body>{children}</body>
+      <body>
+        <TopNav />
+        <div className="app-root">{children}</div>
+      </body>
     </html>
   );
 }
